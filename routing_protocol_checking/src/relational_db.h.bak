@@ -1,0 +1,771 @@
+#ifndef __H_RELATIONAL_DB_
+#define __H_RELATIONAL_DB_
+
+#include <vector>
+#include <set>
+#include <cstring>
+#include <string>
+/* #include <string.h> */
+#include <map>
+#include <unordered_map>
+#include <iostream>
+#include <algorithm>
+#include <pthread.h>
+
+#include "strop.h"
+/* #include "counters.hh" */
+
+using namespace std;
+
+/* #define LEFT_MONOTONICITY 0 */
+/* #define RIGHT_MONOTONICITY 1 */
+/* #define LEFT_ISOTONICITY 0 */
+/* #define RIGHT_ISOTONICITY 1 */
+/* #define ODD_SYMMETRY 0 */
+/* #define TRANSITIVITY 0 */
+/* #define STRICT_ORDER 0 */
+/* #define SOURCE_INDEPENDENCE 0 */
+/* #define LOCAL_MINIMUM_FREE 0 */
+
+class rSets {
+ public:
+  rSets() {}
+
+ rSets(const rSets &rsets) : lessThanMe(rsets.lessThanMe), greaterThanMe(rsets.greaterThanMe) {}
+
+  virtual ~rSets() noexcept {
+    clear();
+  }
+
+  void clear() {
+    std::set<String>().swap(lessThanMe);
+    std::set<String>().swap(greaterThanMe);
+  }
+
+  rSets & operator = (rSets rhs) {
+    swap(rhs);
+    
+    return *this;
+  }
+
+ rSets(rSets &&rsets) : lessThanMe(rsets.lessThanMe), greaterThanMe(rsets.greaterThanMe) {
+    /* rSets().swap(rsets); */
+  }
+
+  std::set<String> & getLessThanMe() {
+    return lessThanMe;
+  }
+
+  const std::set<String> & getLessThanMe() const {
+    return lessThanMe;
+  }
+
+  void setLessThanMe(const std::set<String> &ltm) {
+    /* static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER; */
+    /* pthread_mutex_lock(&lock); */
+    lessThanMe = ltm;
+    /* pthread_mutex_unlock(&lock); */
+  }
+
+  void setLessThanMe(std::set<String> &&ltm) {
+    /* static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER; */
+    /* pthread_mutex_lock(&lock); */
+    lessThanMe.swap(ltm);
+    /* pthread_mutex_unlock(&lock); */
+  }
+
+  void printLessThanMe() const {
+    /* pthread_mutex_lock(&lock); */
+    for (auto &&item : lessThanMe)
+      std::cout << item << " ";
+    std::cout << std::endl;
+    /* for (std::set<std::string>::iterator i = lessThanMe.begin(); i != lessThanMe.end(); ++i) */
+    /*   std::cout << *i << " "; */
+    //    std::cout << lessThanMe.size() << std::endl;
+    /* pthread_mutex_unlock(&lock); */
+  }
+
+  const std::set<String> & getGreaterThanMe() const {
+    return greaterThanMe;
+  }
+
+  std::set<String> & getGreaterThanMe() {
+    return greaterThanMe;
+  }
+
+  void setGreaterThanMe(const std::set<String> &gtm) {
+    /* static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER; */
+    /* pthread_mutex_lock(&lock); */
+    greaterThanMe = gtm;
+    /* pthread_mutex_unlock(&lock); */
+  }
+
+  void setGreaterThanMe(std::set<String> &&gtm) {
+    /* static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER; */
+    /* pthread_mutex_lock(&lock); */
+    greaterThanMe.swap(gtm);
+    /* pthread_mutex_unlock(&lock); */
+  }
+
+  void printGreaterThanMe() const {
+    /* pthread_mutex_lock(&lock); */
+    for (auto &&item : greaterThanMe)
+      std::cout << item << " ";
+    std::cout << std::endl;
+    /* for (std::set<std::string>::iterator i = greaterThanMe.begin(); i != greaterThanMe.end(); ++i) */
+    /*   std::cout << *i << " "; */
+    //    std::cout << greaterThanMe.size() << std::endl;
+    /* pthread_mutex_unlock(&lock); */
+  }
+
+  /* std::vector<std::string> & getKeyInfo() { */
+  /*   return keyInfo; */
+  /* } */
+
+  /* const std::vector<std::string> & getKeyInfo() const { */
+  /*   return keyInfo; */
+  /* } */
+
+  /* void setKeyInfo(const std::string &str) { */
+  /*   std::vector<std::string> v_str(split(str)); */
+  /*   keyInfo.swap(v_str); */
+  /* } */
+
+ private:
+  void swap(rSets &other) {
+    other.lessThanMe.swap(lessThanMe);
+    other.greaterThanMe.swap(greaterThanMe);
+  }
+
+  std::set<String> lessThanMe;
+  std::set<String> greaterThanMe;
+  /* pthread_mutex_t lock; */
+};
+
+class rDB {
+ public:
+ rDB() : size(0) {}
+
+  void swap(rDB &other) {
+    other.db.swap(db);
+    other.valid.swap(valid);
+    size = move(other.size);
+  }
+
+ rDB(cosizest rDB &rdb) : db(rdb.db), valid(rdb.valid), size(rdb.size) {}
+
+  rDB & operator = (rDB rdb) {
+    swap(rdb);
+
+    return *this;
+  }
+
+ rDB(rDB &&rdb) : db(rdb.db), valid(rdb.valid), size(rdb.size) {}
+
+  virtual ~rDB() noexcept {
+    clear();
+    /* pthread_mutex_destroy(&lock); */
+  }
+
+  void clear() {
+    map<String, rSets>().swap(db);
+    vector<vector<int> >().swap(valid);
+    size = 0;
+  }
+
+  void resize(const int &n) {
+    size = n;
+    valid.resize(n + 1, vector<int>(n + 2));
+  }
+
+  int insert(const String &str1, const String &str2, const int &relation) {
+    /* if (relation == -1) */
+    /*   cout << str1 << " < " << str2 << endl; */
+    /* else */
+    /*   cout << str1 << " > " << str2 << endl; */
+    //    pthread_mutex_lock(&lock);
+    /* if (!loop_free(str1) || !loop_free(str2)) { */
+    /*   cout << "insert a path with loop!\n"; */
+    /*   print(); */
+    /*   return; */
+    /* } */
+    
+    if (2 == simple_insert(str1, str2, relation))
+      return 2;
+    if (str1.size() > 2)
+      if (2 == adjust(str1))
+	return 2;
+    if (str2.size() > 2)
+      if (2 == adjust(str2))
+	return 2;
+    //    pthread_mutex_unlock(&lock);
+    return 0;
+  }
+
+  int insert(String &&str1, String &&str2, int &&relation) {
+    return insert(static_cast<const String &>(str1),
+		  static_cast<const String &>(str2),
+		  static_cast<const int &>(relation));
+  }
+
+  int insert(std::string &&str1, std::string &&str2, int &&relation) {
+    return insert(static_cast<const String &>(split(str1)),
+		  static_cast<const String &>(split(str2)),
+		  static_cast<const int &>(relation));
+  }
+
+  int query(const String &str1, const String &str2) {
+    //    pthread_mutex_lock(&lock);
+    /* cout << str1 << " - " << str2 << endl; */
+    if (db.find(str1) == db.end() /* && keyInfo.find(str1) == keyInfo.end() */) {
+      /* keyRegister(str1); */
+      /* cout << keyInfo[str1].size() << endl; */
+      if (str1.size() > 2)
+	if (2 == adjust(str1))
+	  return 2;
+    }
+    if (db.find(str2) == db.end() /* && keyInfo.find(str2) == keyInfo.end() */) {
+      /* keyRegister(str2); */
+      /* cout << keyInfo[str2].size() << endl; */
+      if (str2.size() > 2)
+	if (2 == adjust(str2))
+	  return 2;
+    }
+
+    /* int res = simple_query(str1, str2); */
+    return simple_query(str1, str2);
+    //    pthread_mutex_unlock(&lock);
+
+    /* return res; */
+  }
+
+  int query(String &&str1, String &&str2) {
+    return query(static_cast<const String &>(str1),
+		 static_cast<const String &>(str2));
+  }
+
+  int query(std::string &&str1, std::string &&str2) {
+    return query(static_cast<const String &>(split(str1)),
+		 static_cast<const String &>(split(str2)));
+  }
+
+  int merge(const rDB &other) {
+    rDB temp(*this);		/* roll back in case any exception is thrown */
+    /* map<String, rSets>::const_iterator db_iter; */
+    /* set<String>::iterator set_iter; */
+    for (auto &&pair : other.db) {
+    /* for (db_iter = other.db.begin(); db_iter != other.db.end(); ++db_iter) { */
+      /* string str(pair.first); */
+      /* const set<String> &ltm(db_iter->second.getLessThanMe()); */
+      for (auto &&item : pair.second.getLessThanMe()) {
+      /* for (set_iter = ltm.begin(); set_iter != ltm.end(); ++set_iter) { */
+	/* auto res(temp.query(*set_iter, str)); */
+	auto res(temp.query(item, pair.first));
+	if (0 == res)
+	  if (2 == temp.insert(item, pair.first, -1))
+	    return 2;
+	if (1 == res) {
+	  /* cout << *set_iter << " " << str << endl; */
+	  /* cout << "conflict!\n"; */
+	  /* cout << __LINE__ << endl; */
+	  return -1;
+	}
+	if (2 == res)
+	  return 2;
+      }
+      /* const set<string> &gtm(db_iter->second.getGreaterThanMe()); */
+      /* for (set_iter = gtm.begin(); set_iter != gtm.end(); ++set_iter) { */
+      for (auto &&item : pair.second.getGreaterThanMe()) {
+	/* auto res(temp.query(*set_iter, str)); */
+	auto res(temp.query(item, pair.first));
+	if (0 == res)
+	  if (2 == temp.insert(item, pair.first, 1))
+	    return 2;
+	  else
+	    continue;
+	else if (-1 == res) {
+	  /* cout << *set_iter << " " << str << endl; */
+	  /* cout << "conflict!\n"; */
+	  /* cout << __LINE__ << endl; */
+	  return -1;
+	}
+	else if (2 == res)
+	  return 2;
+      }
+    }
+    swap(temp);
+    return 0;
+  }
+
+  int merge(rDB &&other) {
+    return merge(static_cast<const rDB &>(other));
+  }
+
+  int force_merge(const rDB &other) {
+    rDB temp(*this);
+    int retVal(0);
+    /* map<String, rSets>::const_iterator db_iter; */
+    /* set<String>::iterator set_iter; */
+    /* for (db_iter = other.db.begin(); db_iter != other.db.end(); ++db_iter) { */
+    for (auto &&pair : other.db) {
+      /* String str = db_iter->first; */
+      /* const set<String> &ltm(db_iter->second.getLessThanMe()); */
+      /* for (set_iter = ltm.begin(); set_iter != ltm.end(); ++set_iter) { */
+      for (auto &&item : pair.second.getLessThanMe()) {
+	auto res(temp.query(item, pair.first));
+	if (0 == res)
+	  if (2 == temp.insert(item, pair.first, -1))
+	    return 2;
+	if (1 == res) {//cout << *set_iter << " " << str << endl;
+	  /* cout << "conflict!\n"; */
+	  retVal = -1;
+	}
+	if (2 == res)
+	  return 2;
+      }
+      /* const set<string> &gtm(db_iter->second.getGreaterThanMe()); */
+      /* for (set_iter = gtm.begin(); set_iter != gtm.end(); ++set_iter) { */
+      for (auto &&item : pair.second.getGreaterThanMe()) {
+	auto res(temp.query(item, pair.first));
+	if (0 == res)
+	  if (2 == temp.insert(item, pair.first, 1))
+	    return 2;
+	if (-1 == res) {//cout << *set_iter << " " << str << endl;
+	  /* cout << "conflict!\n"; */
+	  retVal = -1;
+	}
+	if (2 == res)
+	  return 2;
+      }
+    }
+    swap(temp);
+    return retVal;
+  }
+
+  int force_merge(rDB &&other) {
+    return force_merge(static_cast<const rDB &>(other));
+  }
+
+  void print() {
+    static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_lock(&lock);
+    /* unordered_map<string, rSets>::iterator iter; */
+    /* for (iter = db.begin(); iter != db.end(); ++iter) { */
+    for (auto &&pair : db) {
+      /* string key(iter->first); */
+      cout << pair.first << ":\n";
+      cout << "lessThanMe: ";
+      /* set<string>::iterator i; */
+      /* set<string> &ltm(db[key].getLessThanMe()); */
+      db[pair.first].printLessThanMe();
+      /* for (i = ltm.begin(); i != ltm.end(); ++i) { */
+      /* 	cout << *i << " "; */
+      /* } */
+      /* cout << endl; */
+      cout << "greaterThanMe: ";
+      /* set<string> &gtm(db[key].getGreaterThanMe()); */
+      /* for (i = gtm.begin(); i != gtm.end(); ++i) { */
+      /* 	cout << *i << " "; */
+      /* } */
+      /* cout << endl; */
+      db[pair.first].printGreaterThanMe();
+    }
+    pthread_mutex_unlock(&lock);
+  }
+
+ private:
+
+  /* bool startswith(cosnt string &str, const string &prefix) { */
+  /*   if (str.empty()) { */
+  /*     return false; */
+  /*   } */
+  /*   else if (0 == str.find(prefix)) { */
+  /*     return true; */
+  /*   } */
+  /*   else { */
+  /*     return false; */
+  /*   } */
+  /* } */
+
+  /* vector<string> split(const string &str, const char *c = "-") { */
+  /*   char *cstr, *p; */
+  /*   vector<string> res; */
+  /*   cstr = new char[str.size()+1]; */
+  /*   strcpy(cstr, str.c_str()); */
+  /*   p = strtok(cstr, c); */
+  /*   while(p != NULL) { */
+  /*     res.push_back(p); */
+  /*     p = strtok(NULL, c); */
+  /*   } */
+
+  /*   return res; */
+  /* } */
+
+  /* void keyRegister(const string &str) { */
+  /*   /\* if (keyInfo.find(str) == keyInfo.end()) *\/ */
+  /*   rSets &rsets(db[str]); */
+  /*   if (rsets.getKeyInfo().empty()) */
+  /*     rsets.setKeyInfo(str);//[str] = split(str); */
+  /* } */
+
+  int simple_insert(const String &str1, const String &str2, const int &relation) {
+    if (str1 == str2)
+      return 2;
+    /* keyRegister(str1); */
+    /* keyRegister(str2); */
+    /* set<string>::iterator i; */
+    /* set<string> tmp; */
+
+    if (1 == relation) {
+      /* std::set<std::string> &gtm(db[str1].getGreaterThanMe()); */
+      /* std::set<std::string> &ltm(db[str2].getLessThanMe()); */
+      if ((db[str1].getGreaterThanMe().count(str2) != 0)
+	  || (db[str2].getLessThanMe().count(str1) != 0)) {
+	cout << "serious conflict!\n";
+	return 2;
+      }
+      if (db[str1].getLessThanMe().find(str2) == db[str1].getLessThanMe().end())
+	db[str1].getLessThanMe().insert(str2);
+      if (db[str2].getGreaterThanMe().find(str1) == db[str2].getGreaterThanMe().end()) {
+	db[str2].getGreaterThanMe().insert(str1);
+	/* ck_pr_inc_64((uint64_t *)&Counters::insert_cnt); */
+      }
+      db[str1].getLessThanMe().insert(db[str2].getLessThanMe().begin(),
+				      db[str2].getLessThanMe().end());
+      db[str2].getGreaterThanMe().insert(db[str1].getGreaterThanMe().begin(),
+					 db[str1].getGreaterThanMe().end());
+      for (auto &&item : db[str2].getLessThanMe()) {
+      /* tmp = db[str2].getLessThanMe(); */
+      /* for (i = tmp.begin(); i != tmp.end(); ++i) { */
+	db[item].getGreaterThanMe().insert(str1);
+	db[item].getGreaterThanMe().insert(db[str1].getGreaterThanMe().begin(),
+					   db[str1].getGreaterThanMe().end());
+      }
+      for (auto &&item : db[str1].getGreaterThanMe()) {
+      /* tmp = db[str1].getGreaterThanMe(); */
+      /* for (i = tmp.begin(); i != tmp.end(); ++i) { */
+	db[item].getLessThanMe().insert(str2);
+	db[item].getLessThanMe().insert(db[str2].getLessThanMe().begin(),
+					db[str2].getLessThanMe().end());
+      }
+    }
+    if (-1 == relation) {
+      if ((db[str1].getLessThanMe().find(str2) != db[str1].getLessThanMe().end())
+	  || (db[str2].getGreaterThanMe().find(str1) != db[str2].getGreaterThanMe().end())) {
+	cout << "serious conflict!\n";
+	return 2;
+      }
+      if (db[str1].getGreaterThanMe().find(str2) == db[str1].getGreaterThanMe().end())
+	db[str1].getGreaterThanMe().insert(str2);
+      if (db[str2].getLessThanMe().find(str1) == db[str2].getLessThanMe().end()) {
+	db[str2].getLessThanMe().insert(str1);
+	/* ck_pr_inc_64((uint64_t *)&Counters::insert_cnt); */
+      }
+      /* if ((str1.size() > 2) */
+      /* 	  && (db[str1].getLessThanMe().empty()) */
+      /* 	  && (db[str2].getGreaterThanMe().empty())) */
+      /* 	adjust(str1); */
+      /* if ((str2.size() > 2)  */
+      /* 	  && (db[str2].getLessThanMe().empty()) */
+      /* 	  && (db[str2].getGreaterThanMe().empty())) */
+      /* 	adjust(str2); */
+      db[str1].getGreaterThanMe().insert(db[str2].getGreaterThanMe().begin(),
+					 db[str2].getGreaterThanMe().end());
+      db[str2].getLessThanMe().insert(db[str1].getLessThanMe().begin(),
+				      db[str1].getLessThanMe().end());
+      for (auto &&item : db[str2].getGreaterThanMe()) {
+      /* tmp = db[str2].getGreaterThanMe(); */
+      /* for (i = tmp.begin(); i != tmp.end(); ++i) { */
+	db[item].getLessThanMe().insert(str1);
+	db[item].getLessThanMe().insert(db[str1].getLessThanMe().begin(),
+					db[str1].getLessThanMe().end());
+      }
+      for (auto &&item : db[str1].getLessThanMe()) {
+      /* tmp = db[str1].getLessThanMe(); */
+      /* for (i = tmp.begin(); i != tmp.end(); ++i) { */
+	db[item].getGreaterThanMe().insert(str2);
+	db[item].getGreaterThanMe().insert(db[str2].getGreaterThanMe().begin(),
+					   db[str2].getGreaterThanMe().end());
+      }
+    }
+    return 0;
+  }
+
+  int adjust(const String &str) {
+    /* vector<string> &v_str(db[str].getKeyInfo()); */
+    int i, j, size = str.size();
+    /* String str1, str2; */
+    int res;
+
+#ifdef LEFT_MONOTONICITY
+/* #if (LEFT_MONOTONICITY==1) */
+    for (i = 0; i < size - 2; ++i) {
+      auto str1(assemble(str, i, size));
+      for (j = i + 1; j < size - 1; ++j) {
+	/* string(str.begin() + i, str.begin() + size); */
+	/* cout << str1 << endl; */
+	auto str2(assemble(str, j, size));
+	/* string(str.begin() + j, str.begin() + size); */
+	/* cout << str2 << endl; */
+	res = simple_query(str1, str2);
+	if (0 == res)
+	  if (2 == simple_insert(str1, str2, 1))
+	    return 2;
+	if (2 == res)
+	  return 2;
+      }
+    }
+#endif	/* left-monotonicity adjustment */
+
+#ifdef RIGHT_MONOTONICITY
+/* #if (RIGHT_MONOTONICITY==1) */
+    for (i = 2; i < size; ++i) {
+      auto str1(assemble(str, 0, i));
+      for (j = i + 1; j <= size; ++j) {
+	/* string(str.begin(), str.begin() + i); */
+	/* cout << str1 << endl; */
+	auto str2(assemble(str, 0, j));
+	/* string(str.begin(), str.begin() + j); */
+	/* cout << str2 << endl; */
+	res = simple_query(str1, str2);
+	/* res = query(str1, str2); */
+	if (0 == res)
+	  if (2 == simple_insert(str1, str2, -1))
+	    return 2;
+	if (2 == res)
+	  return 2;
+      }
+    }
+#endif	/* right-monotonicity adjustment */
+
+#ifdef LEFT_ISOTONICITY
+/* #if (LEFT_ISOTONICITY==1) */
+    if (size < 3)
+      return 0;
+    for (i = 1; i < size - 1; ++i) {
+      auto target(assign(str, i, size));
+      /* string target(assemble(v_target, 0, v_target.size())); */
+      /* string(str.begin() + i, str.begin() + size); */
+      auto prefix(assign(str, 0, i));
+      /* string prefix(assemble(v_prefix, 0, v_prefix.size())); */
+      /* string(str.begin(), str.begin() + i); */
+      /* cout << str << " " << target << " " << prefix << endl; */
+
+      /* set<string> &ltm(db[target].getLessThanMe()); */
+      /* set<string> &gtm(db[target].getGreaterThanMe()); */
+      /* set<string>::iterator it; */
+      auto tmp_prefix(prefix);
+      sort(tmp_prefix.begin(), tmp_prefix.end());
+
+      for (auto &&item : db[target].getLessThanMe()) {
+      /* for (it = ltm.begin(); it != ltm.end(); ++it) { */
+	/* tmp = *it; */
+	auto tmp(item);
+	/* vector<string> v_tmp(split(tmp)); */
+	if ((tmp.front() == target.front()) 
+	    && (tmp.back() == target.back())) {
+	  String intersection;
+	  sort(tmp.begin() + 1, tmp.end() - 1);
+	  set_intersection(tmp.begin() + 1, tmp.end() - 1,
+			   tmp_prefix.begin(), tmp_prefix.end(),
+			   inserter(intersection, intersection.begin()));
+	  if (0 == intersection.size()) {
+	    auto str1(prefix);
+	    concat(str1, item);
+	    res = query(str1, str);
+	    if (0 == res)
+	      if (2 == simple_insert(str1, str, -1))
+		return 2;
+	    if (2 == res)
+	      return 2;
+	  }
+	}
+      }
+      for (auto &&item : db[target].getGreaterThanMe()) {
+      /* for (it = gtm.begin(); it != gtm.end(); ++it) { */
+	/* tmp = *it; */
+	auto tmp(item);
+	/* vector<string> v_tmp(split(tmp)); */
+	  
+	/* cout << "tmp: " << tmp << " " << tmp.back() << " " << target.back() << endl; */
+	if ((tmp.front() == target.front()) 
+	    && (tmp.back() == target.back())) {
+	  String intersection;
+	  sort(tmp.begin() + 1, tmp.end() - 1);
+	  set_intersection(tmp.begin() + 1, tmp.end() - 1,
+			   tmp_prefix.begin(), tmp_prefix.end(),
+			   inserter(intersection, intersection.begin()));
+
+	  if (0 == intersection.size()) {
+	    auto str1(prefix);
+	    concat(str1, item);
+	    res = query(str1, str);
+	    if (0 == res)
+	      if (2 == simple_insert(str1, str, 1))
+		return 2;
+	    if (2 == res)
+	      return 2;
+	  }
+	}
+      }
+    }
+#endif	/* left-isotonicity adjustment */
+
+#ifdef RIGHT_ISOTONICITY
+/* #if (RIGHT_ISOTONICITY==1) */
+    if (size < 3)
+      return 0;
+    for (i = size - 2; i > 0; --i) {
+      auto target(assign(str, 0, i + 1));
+      /* string target(assemble(v_target, 0, v_target.size())); */
+      /* string(str.begin(), str.begin() + i + 1); */
+      auto suffix(assign(str, i + 1, size));
+      /* string suffix(assemble(v_suffix, 0, v_suffix.size())); */
+      /* string(str.begin() + i + 1, str.end()); */
+      /* cout << str << " " << target << " " << suffix << endl; */
+
+      auto tmp_suffix(suffix);
+      sort(tmp_suffix.begin(), tmp_suffix.end());
+
+      /* set<string> &ltm(db[target].getLessThanMe()); */
+      /* set<string> &gtm(db[target].getGreaterThanMe()); */
+      /* set<string>::iterator it; */
+      /* string tmp; */
+      for (auto &&item : db[target].getLessThanMe()) {
+      /* for (it = ltm.begin(); it != ltm.end(); ++it) { */
+	/* tmp = *it; */
+	auto tmp(item);
+	/* vector<string> v_tmp(split(tmp)); */
+	if ((tmp.front() == target.front()) 
+	    && (tmp.back() == target.back())) {
+	  String intersection;
+	  sort(tmp.begin() + 1, tmp.end() - 1);
+	  set_intersection(tmp.begin() + 1, tmp.end() - 1,
+			   tmp_suffix.begin(), tmp_suffix.end(),
+			   inserter(intersection, intersection.begin()));
+	  if (0 == intersection.size()) {
+	    auto str1(item);
+	    concat(str1, suffix);
+	    /* str1 += suffix; */
+	    res = query(str1, str);
+	    if (0 == res)
+	      if (2 == simple_insert(str1, str, -1))
+		return 2;
+	    if (2 == res)
+	      return 2;
+	  }
+	}
+      }
+      for (auto &&item : db[target].getGreaterThanMe()) {
+      /* for (it = gtm.begin(); it != gtm.end(); ++it) { */
+	auto tmp(item);
+	/* tmp = *it; */
+	/* vector<string> v_tmp(split(tmp)); */
+	  
+	/* cout << "tmp: " << tmp << " " << tmp.back() << " " << target.back() << endl; */
+	if ((tmp.front() == target.front()) 
+	    && (tmp.back() == target.back())) {
+	  String intersection;
+	  sort(tmp.begin() + 1, tmp.end() - 1);
+	  set_intersection(tmp.begin() + 1, tmp.end() - 1,
+			   tmp_suffix.begin(), tmp_suffix.end(),
+			   inserter(intersection, intersection.begin()));
+
+	  if (0 == intersection.size()) {
+	    auto str1(item);
+	    concat(str1, suffix);
+	    /* str1 += suffix; */
+	    res = query(str1, str);
+	    if (0 == res)
+	      if (2 == simple_insert(str1, str, 1))
+		return 2;
+	    if (2 == res)
+	      return 2;
+	  }
+	}
+      }
+    }
+#endif	/* right-isotonicity adjustment */
+
+#ifdef ODD_SYMMETRY
+#endif	/* ODD_SYMMETRY */
+
+#ifdef TRANSITIVITY
+#endif	/* TRANSITIVITY */
+
+#ifdef STRICT_ORDER
+#endif	/* STRICT_ORDER */
+
+#ifdef SOURCE_INDEPENDENCE
+#endif	/* SOURCE_INDEPENDENCE */
+
+#ifdef LOCAL_MINIMUM_FREE
+#endif	/* LOCAL_MINIMUM_FREE */
+    return 0;
+  }
+
+  int simple_query(const String &str1, const String &str2) {
+    /* keyRegister(str1); */
+    /* keyRegister(str2); */
+    auto ltm1(db[str1].getLessThanMe());
+    auto gtm2(db[str2].getGreaterThanMe());
+    if ((ltm1.find(str2) != ltm1.end()) && (gtm2.find(str1) != gtm2.end())) {
+	/* ck_pr_inc_64((uint64_t *)&Counters::query_cnt); */
+      return 1;
+    }
+    auto ltm2(db[str2].getLessThanMe());
+    auto gtm1(db[str1].getGreaterThanMe());
+    if ((gtm1.find(str2) != gtm1.end()) && (ltm2.find(str1) != ltm2.end())) {
+	/* ck_pr_inc_64((uint64_t *)&Counters::query_cnt); */
+      return -1;
+    }
+    return 0;
+  }
+
+  String assemble(const String &str, const int &head, const int &rear) {
+    /* static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER; */
+    /* pthread_mutex_lock(&lock); */
+    String ret(str.begin() + head, str.begin() + rear);
+    /* string res(""); */
+    /* int i(0); */
+    /* for (i = head; i < rear - 1; ++i) { */
+    /*   res.append(v_str[i]); */
+    /*   res.append(separator); */
+    /* } */
+    /* res.append(v_str[i]); */
+
+    /* pthread_mutex_unlock(&lock); */
+
+    return ret;
+  }
+
+  String 
+    assign(const String &str, const int &head, const int &rear) {
+    String ret;
+    for (int i = head; i != /* < */ rear; ++i)
+      ret.push_back(str[i]);
+    return ret;
+  }
+
+  /* bool loop_free(const string &str) { */
+  /*   vector<string> v_str(split(str)); */
+  /*   set<string> unique_set;// = set<string>(); */
+  /*   for (unsigned i = 0; i < v_str.size(); ++i) { */
+  /*     if (unique_set.count(v_str[i]) == 0) */
+  /* 	unique_set.insert(v_str[i]); */
+  /*     else { */
+  /* 	cout << str << endl; */
+  /* 	return false; */
+  /*     } */
+  /*   } */
+  /*   return true; */
+  /* } */
+
+  map<String, rSets> db;
+  vector<vector<int> > valid;
+  int size;
+  /* unordered_map<string, vector<string> > keyInfo; */
+  /* pthread_mutex_t lock; */
+};
+
+#endif	/* __H_RELATIONAL_DB_ */

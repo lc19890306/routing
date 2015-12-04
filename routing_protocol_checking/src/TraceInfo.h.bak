@@ -1,0 +1,264 @@
+#ifndef __H_TRACE_INFO_
+#define __H_TRACE_INFO_
+
+#include "headers.h"
+#include "relational_db.h"
+#include "ProgramState.hh"
+
+#include <pthread.h>
+#include <vector>
+#include <exception>
+
+/*
+typedef struct {
+  rDB db;
+  string optimalPath;
+} TraceInfo;
+*/
+
+class TraceInfo {
+ public:
+ /* TraceInfo() : /\*db(rDB()), optimalPath(string()), *\/level(0), first(0), last(0), pPS(NULL), job(RECORD), label(0) { */
+ /*    /\* pthread_mutex_init(&lock, NULL); *\/ */
+ /*  } */
+
+  TraceInfo() {
+    level = 0;
+    first = 0;
+    last = 0;
+    pPS = NULL;
+    job = RECORD;
+    label = 0;
+  }
+
+ /* TraceInfo(const unsigned &first, const unsigned &last) : /\*db(rDB()), optimalPath(string()), *\/level(0), first(first), last(last), pPS(NULL), job(RECORD), label(0) { */
+ /*    /\* pthread_mutex_init(&lock, NULL); *\/ */
+ /*  } */
+
+  TraceInfo(const unsigned &first, const unsigned &last) {
+    level = 0;
+    this->first = first;
+    this->last = last;
+    pPS = NULL;
+    job = RECORD;
+    label = 0;
+  }
+
+ /* TraceInfo(const TraceInfo &traceInfo) : db(traceInfo.db), optimalPath(traceInfo.optimalPath), level(traceInfo.level), first(traceInfo.first), last(traceInfo.last), pPS(traceInfo.pPS), job(traceInfo.job), label(traceInfo.label) {} */
+
+  TraceInfo(const TraceInfo &traceInfo) {
+    level = traceInfo.level;
+    first = traceInfo.first;
+    db = traceInfo.db;
+    last = traceInfo.last;
+    pPS = traceInfo.pPS;
+    job = traceInfo.job;
+    optimalPath = traceInfo.optimalPath;
+    label = traceInfo.label;
+  }
+
+ /* TraceInfo(const TraceInfo &traceInfo) : */
+ /*  level(traceInfo.level), */
+ /*    first(traceInfo.level), */
+ /*    db(traceInfo.db), */
+ /*    last(traceInfo.last), */
+ /*    pPS(traceInfo.pPS), */
+ /*    job(traceInfo.job), */
+ /*    optimalPath(traceInfo.optimalPath), */
+ /*    label(traceInfo.label) {} */
+
+  TraceInfo & operator = (const TraceInfo &traceInfo) {
+    rDB tempDB(traceInfo.db);
+    std::swap(tempDB, db);
+    /* db = traceInfo.db; */
+    std::string(traceInfo.optimalPath).swap(optimalPath);
+    /* optimalPath = traceInfo.optimalPath; */
+    level = traceInfo.level;
+    first = traceInfo.first;
+    last = traceInfo.last;
+    pPS = traceInfo.pPS;
+    job = traceInfo.job;
+    label = traceInfo.label;
+    /* lock = traceInfo.lock; */
+
+    return *this;
+  }
+
+  TraceInfo(TraceInfo &&traceInfo) :
+  level(traceInfo.level),
+    first(traceInfo.level),
+    db(traceInfo.db),
+    last(traceInfo.last),
+    pPS(traceInfo.pPS),
+    job(traceInfo.job),
+    optimalPath(traceInfo.optimalPath),
+    label(traceInfo.label) {
+    rDB emptyDB;
+    std::swap(emptyDB, traceInfo.db);
+    traceInfo.pPS = nullptr;
+    std::string().swap(traceInfo.optimalPath);
+  }
+
+  TraceInfo & operator = (TraceInfo &&traceInfo) {
+    rDB tempDB(traceInfo.db);
+    std::swap(tempDB, db);
+    /* db = traceInfo.db; */
+    std::string(traceInfo.optimalPath).swap(optimalPath);
+    /* optimalPath = traceInfo.optimalPath; */
+    level = traceInfo.level;
+    first = traceInfo.first;
+    last = traceInfo.last;
+    pPS = traceInfo.pPS;
+    job = traceInfo.job;
+    label = traceInfo.label;
+    rDB emptyDB;
+    std::swap(emptyDB, traceInfo.db);
+    traceInfo.pPS = nullptr;
+    std::string().swap(traceInfo.optimalPath);
+    /* lock = traceInfo.lock; */
+
+    return *this;
+  }
+
+  virtual ~TraceInfo() {
+    /* if (NULL != pPS) { */
+    /*   delete pPS; */
+    /*   pPS = NULL; */
+    /* } */
+    pPS = NULL;
+    /* pthread_mutex_destroy(&lock); */
+  }
+
+  /* rDB & getDB() { */
+  /*   return db; */
+  /* } */
+
+  rDB getDB() const {
+    return this->db;
+  }
+
+  /* const rDB & getDB() const { */
+  /*   return db; */
+  /* } */
+
+  void setDB(const rDB &rdb) {
+    /* static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER; */
+    /* pthread_mutex_lock(&lock); */
+    db = rdb;
+    /* pthread_mutex_unlock(&lock); */
+  }
+
+  string getOptimalPath() const {
+    return optimalPath;
+  }
+
+  /* const string & getOptimalPath() const { */
+  /*   return optimalPath; */
+  /* } */
+
+  void setOptimalPath(const string &path) {
+    /* static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER; */
+    /* pthread_mutex_lock(&lock); */
+    optimalPath = path;
+    /* pthread_mutex_unlock(&lock); */
+  }
+
+  unsigned getLevel() const {
+    return level;
+  }
+
+  void setLevel(const unsigned &level) {
+    this->level = level;
+  }
+
+  void resetLevel() {
+    level = 0;
+  }
+
+  unsigned getFirst() const {
+    return first;
+  }
+
+  void setFirst(const unsigned &node) {
+    first = node;
+  }
+
+  unsigned getLast() const {
+    return last;
+  }
+
+  void setLast(const unsigned &node) {
+    last = node;
+  }
+
+  /* unsigned getCmpVal(const unsigned &currentLevel) const { */
+  /*   if (currentLevel > cmpVal.size()) */
+  /*     return 0; */
+  /*   return cmpVal[currentLevel - 1]; */
+  /* } */
+
+  /* void addCmpVal(const int &value) { */
+  /*   cmpVal.push_back(value); */
+  /* } */
+
+  pProgramState getPSPtr() const {
+    return pPS;
+  }
+
+  void setPSPtr(const pProgramState &pPS) {
+    if (NULL != this->pPS && this->pPS->is_GCAllowed())
+      try {
+	/* std::cout << __FILE__ << ": " << __FUNCTION__ << ": " << __LINE__ << ": " << this->pPS << std::endl; */
+	pthread_mutex_lock(&AddressBook::lock);
+	if (AddressBook::addresses.find(this->pPS) == AddressBook::addresses.end()) {
+	  AddressBook::addresses.insert(this->pPS);
+	  delete this->pPS;
+	}
+	pthread_mutex_unlock(&AddressBook::lock);
+      } catch (const std::exception &e) {
+      std::cout << e.what() << std::endl << __FILE__ << ": " << __FUNCTION__ << ": " << __LINE__ << std::endl;
+    }
+    this->pPS = pPS;
+  }
+
+  CheckJob getJob() const {
+    return job;
+  }
+
+  void setJob(const CheckJob &job) {
+    this->job = job;
+  }
+
+  void collectGarbage() {
+    if (NULL != pPS) {
+      /* std::cout << __FILE__ << ": " << __FUNCTION__ << ": " << __LINE__ << ": " << pPS << std::endl; */
+      if (AddressBook::addresses.find(pPS) == AddressBook::addresses.end()) {
+	AddressBook::addresses.insert(pPS);
+	delete pPS;
+      }
+    }
+    pPS = NULL;
+  }
+
+  unsigned getLabel() const {
+    return label;
+  }
+
+  void setLabel(const unsigned &label) {
+    this->label = label;
+  }
+
+ private:
+  unsigned level;
+  unsigned first;
+  rDB db;
+  unsigned last;
+  pProgramState pPS;
+  /* std::vector<int> cmpVal; */
+  CheckJob job;
+  string optimalPath;
+  unsigned label;
+  /* pthread_mutex_t lock; */
+};
+
+#endif	/* __H_TRACE_INFO_ */

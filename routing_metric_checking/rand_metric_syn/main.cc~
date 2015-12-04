@@ -1,0 +1,51 @@
+#include "RandMetric.hh"
+#include "TestProgram.hh"
+
+#include <iostream>
+#include <climits>
+// #include <boost/program_options.hpp>
+
+// namespace po = boost::program_options;
+
+int main(int argc, char **argv) {
+  std::size_t depth(5), max_size(3);
+  switch (argc) {
+  case 1:
+    break;
+  case 2:
+    // std::string argv_1(argv[1]);
+    // if (startsWith(argv_1, "--depth=")) {
+    depth = atoi(argv[1]);
+    if (depth == 0 || depth >= UINT_MAX) {
+      std::cerr << "Error: faulty depth provided!\n";
+      return 1;
+    }
+    // }
+    // if (startsWith(argv_1, "--max-size=")) {
+    //   max_size = 
+    // }
+    break;
+  case 3:
+    depth = atoi(argv[1]);
+    if (depth == 0 || depth >= UINT_MAX) {
+      std::cerr << "Error: faulty depth provided!\n";
+      return 1;
+    }
+    max_size = atoi(argv[2]);
+    if (max_size == 0 || max_size >= UINT_MAX) {
+      std::cerr << "Error: faulty max size provided!\n";
+      return 1;
+    }
+    break;
+  default:
+    std::cerr << "Error: faulty arguments provided!\n";
+    return 1;
+  }
+
+  RandMetric metric(depth, max_size);
+  TestProgram program(metric);
+  // program.print();
+  // program.writeIntoFile();
+
+  return 0;
+}

@@ -1,0 +1,304 @@
+#include "dijkstra.h"
+#include "checkpoint.hh"
+
+void initialize(std::vector<std::vector<Path<int> > > &path) {
+  for (std::size_t i = 1; i != path.size(); ++i) {
+    for (std::size_t j = 1; j != path[i].size(); ++j) {
+      path[i][j].set_head(i);
+      path[i][j].set_rear(j);
+    }
+  }
+}
+
+// void initialize(Path<int> path[maxnum][maxnum], int n) {
+//   if (n == 0)
+//     n = maxnum;
+//   int i, j;
+//   for (i = 1; i <= n; ++i) {
+//     for (j = 1; j <= n; ++j) {
+//       path[i][j].set_head(i);
+//       path[i][j].set_rear(j);
+//     }
+//   }
+// }
+
+// n -- n nodes
+// v -- the source node
+// dist[] -- the distance from the ith node to the source node
+// prev[] -- the previous node of the i-th node
+// c[][] -- every two nodes' distance
+void Dijkstra(const TraceInfo &traceInfo, Graph *graph) {
+  // cout << counter++ << endl;
+  const unsigned n = traceInfo.getLast();
+  const unsigned v = traceInfo.getFirst();
+
+  int res(0);
+  TraceInfo this_traceInfo(traceInfo);
+  unsigned i(0), j(0);
+  std::vector<std::vector<Path<int> > > path(n + 1, std::vector<Path<int> >(n + 1));
+  // Path<int> path[maxnum][maxnum];
+  initialize(path);
+  // initialize(path, n);
+  std::bitset<maxnum> s;
+  // bool s[maxnum] = {false};    // 判断是否已存入该点到S集合中
+  unsigned u(0);
+  unsigned x(0), y(0);
+  Path<int> tmp;
+
+  switch (this_traceInfo.getLabel()) {
+  case 1:
+    goto L1;
+  case 2:
+    goto L2;
+  case 3:
+    goto L3;
+  case 4:
+    goto L4;
+  case 5:
+    goto L5;
+  case 6:
+    goto L6;
+  case 7:
+    goto L7;
+  default:
+    break;
+  }
+
+  for(i=1; i<=n; ++i) {
+    // s[i] = 0;     // 初始都未用过该点
+    if (v == i)
+      continue;
+
+  L1:
+    // checkpoint(1, path[v][i], graph, n, v, res, this_traceInfo, i, j, path, s, u, x, y, tmp);
+    if (0 != compare(inf, graph->weight(path[v][i]))) {
+      /* if (0 != compare(inf, weight(c, path, v, i))) { */
+      path[v][i].push_back(v);
+      path[v][i].push_back(i);
+    }
+  }
+
+  s[v] = 1;
+    
+  // 依次将未放入S集合的结点中，取dist[]最小值的结点，放入结合S中
+  // 一旦S包含了所有V中顶点，dist就记录了从源点到所有其他顶点之间的最短路径长度
+  // 注意是从第二个节点开始，第一个为源点
+  for(i=2; i<=n; ++i) {
+    u = v;
+
+    // unsigned x(0), y(0);
+    for (x = 1; x <= n; ++x) {
+      if (s[x])
+    	continue;
+      // if (v == x)
+      // 	continue;
+
+    L2:
+      // checkpoint(2, path[v][x], graph, n, v, res, this_traceInfo, i, j, path, s, u, x, y, tmp);
+      if (1 != compare(inf, graph->weight(path[v][x])))
+  	/* if (1 != compare(inf, weight(c, path, v, x))) */
+    	continue;
+      for (y = x + 1; y <= n; ++y) {
+    	if (s[y])
+    	  continue;
+
+      L3:
+	// checkpoint(3, path[v][y], graph, n, v, res, this_traceInfo, i, j, path, s, u, x, y, tmp);
+    	if (1 != compare(inf, graph->weight(path[v][y])))
+    	  continue;
+
+	// bool do_cmp1 = false, do_cmp2 = false;
+	// for (unsigned node = 1; node <= n; ++node) {
+	//   if (1 == graph->matrix[x][node]) {
+	//     if (!s[node]) {
+	//       do_cmp1 = true;
+	//       break;
+	//     }
+	//   }
+	// }
+	// for (unsigned node = 1; node <= n; ++node) {
+	//   if (1 == graph->matrix[y][node]) {
+	//     if (!s[node]) {
+	//       do_cmp2 = true;
+	//       break;
+	//     }
+	//   }
+	// }
+	// if (do_cmp1 & !do_cmp2) {
+	//   s[y] = 1;
+	//   continue;
+	// }
+	// if (!do_cmp1 & do_cmp2) {
+	//   s[x] = 1;
+	//   u = y;
+	//   x = y;
+	//   break;
+	// }
+	// if (!do_cmp1 & !do_cmp2) {
+	//   s[x] = 1;
+	//   s[y] = 1;
+	//   continue;
+	// }
+
+      L4:
+	// checkpoint(4, path[v][x], graph, n, v, res, this_traceInfo, i, j, path, s, u, x, y, tmp);
+
+      L5:
+	checkpoint(5, path[v][y], graph, n, v, res, this_traceInfo, i, j, path, s, u, x, y, tmp);
+	res = compare(path[v][x], path[v][y], this_traceInfo, graph);
+	if (2 == res)
+	  return;
+    	if (1 == res) {
+    	  u = y;
+    	  x = y;
+    	  break;
+    	}
+      }
+      if (x != y) {
+    	u = x;
+  	break;
+      }
+      else {
+  	--x;
+      }
+    }
+
+    /* // 找出当前未使用的点j的dist[j]最小值 */
+    /* for(j=1; j<=n; ++j) */
+    /*   if((!s[j]) && -1 == compare(weight(c, path, v, j), tmp)) { */
+    /* 	u = j;              // u保存当前邻接点中距离最小的点的号码 */
+    /* 	tmp = weight(c, path, v, j); */
+    /*   } */
+    s[u] = 1;    // 表示u点已存入S集合中
+    // 更新dist
+    for(j=1; j<=n; ++j) {
+      // if (v == j)
+      // 	continue;
+
+    L6:
+      // checkpoint(6, path[u][j], graph, n, v, res, this_traceInfo, i, j, path, s, u, x, y, tmp);
+      if ((!s[j]) && -1 == compare(graph->weight(path[u][j]), inf)) {
+  	/* if ((!s[j]) && -1 == compare(weight(c, path, u, j), inf)) { */
+  	path[u][j].push_back(u);
+  	path[u][j].push_back(j);
+  	/* int newdist = weight(c, path[v][u] + path[u][j]);  */
+  	/* int newdist = weight(c, path, v, u, j);  */
+	tmp.clear();
+        tmp = path[v][u] + path[u][j];
+	if (path[v][j].is_checked())
+	  tmp.check();
+
+      L7:
+	checkpoint(7, path[v][j], graph, n, v, res, this_traceInfo, i, j, path, s, u, x, y, tmp);
+	res = compare(tmp, path[v][j], this_traceInfo, graph);
+	if (2 == res)
+	  return;
+  	if(-1 == res) {
+  	  /* if(-1 == compare(weight(c, path, v, u, j), weight(c, path, v, j))) { */
+  	  /* dist[j] = weight(c, path, v, u, j); */
+  	  path[v][j].clear();
+  	  path[v][j] = tmp;
+  	  // std::copy(path[u][j].begin()+1, path[u][j].end(), std::back_inserter(path[v][j]));
+  	}
+      }
+    }
+  }
+
+  checkOptimality(graph, this_traceInfo, path[v][n]);
+  // pthread_mutex_lock(&graph->v_lock[v]);
+  // // this_traceInfo.getDB().print();
+  // graph->v_traces[v].push_back(this_traceInfo);
+  // pthread_mutex_unlock(&graph->v_lock[v]);
+  std::vector<std::vector<Path<int> > >().swap(path);
+}
+
+// void *thread_routine(void *arg) {
+  // pthread_detach(pthread_self());
+  // ck_pr_inc_64((uint64_t *)&runningThread::counter);
+  // pthread_mutex_lock(&runningThread::lock);
+  // ++runningThread::counter;
+  // pthread_mutex_unlock(&runningThread::lock);
+
+  // for (int i = 0; i < (*(Params *)arg).traces.size()
+  // Params *params = NULL;
+  // params = (Params *)arg;
+  // Params params = *(static_cast<Params *>(arg));
+  // Params params = *(Params *)arg;
+  // Params *params = (Params *)arg;
+  // int n = params->n;
+  // int v = params->v;
+  // int c[maxnum][maxnum];
+  // for (int i = 0; i < maxnum; ++i)
+  //   for (int j = 0; j < maxnum; ++j)
+  //     c[i][j] = params->c[i][j];
+  // TraceInfo this_traceInfo = params->traceInfo;
+  // vector<TraceInfo> traces = params->traces;
+  // vector<string> possible_paths = params->possible_paths;
+  // int **c
+  // delete (Params *)arg;
+  // delete params;		// new in createParams
+
+  // #############################################
+  // pthread_mutex_lock(params.lock);
+  //   pthread_cond_signal(params.cond);
+  // pthread_mutex_unlock(params.lock);
+  // pthread_cond_destroy(params.cond);
+  // pthread_mutex_destroy(params.lock);
+  // ##############################################
+
+  // delete (Params *)arg;
+  // Dijkstra(params.traceInfo);
+  // Dijkstra(n, v, c, this_traceInfo, traces, possible_paths);
+  // pthread_exit(NULL);
+
+  // ck_pr_dec_64((uint64_t *)&runningThread::counter);
+  // pthread_mutex_lock(&runningThread::lock);
+  // --runningThread::counter;
+  // pthread_mutex_unlock(&runningThread::lock);
+//   return (void *)0;
+// }
+
+// Params createParams(const int &n, const int &v, const int c[maxnum][maxnum], const TraceInfo &traceInfo, const vector<string> &possible_paths) {
+//   Params res;	// delete in thread_routine
+//   res.n = n;
+//   res.v = v;
+//   for (int i = 0; i < maxnum; ++i)
+//     for (int j = 0; j < maxnum; ++j)
+//       res.c[i][j] = c[i][j];
+//   res.traceInfo = traceInfo;
+//   // res.traces = traces;
+//   res.possible_paths = possible_paths;
+//   static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+//   static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+//   // static bool flag = false;
+//   res.cond = &cond;
+//   res.lock = &lock;
+//   // pthread_cond_init(&res.cond, NULL);
+//   // pthread_mutex_init(&res.lock, NULL);
+//   // res.flag = &flag;
+
+//   return res;
+// }
+
+// Params *createParams(const TraceInfo &traceInfo) {
+  // pthread_mutex_lock(&lock);
+  // Params *res = new Params;	// delete in thread_routine
+  // cout << pthread_self() << " : " << res << endl;
+  // res->n = n;
+  // res->v = v;
+
+  // res->traceInfo = traceInfo;
+  // res->traces = traces;
+  // res->possible_paths = possible_paths;
+
+  // #################################################
+  // pthread_mutex_t *lock = new pthread_mutex_t;
+  // pthread_cond_t *cond = new pthread_cond_t;
+  // pthread_mutex_init(lock, NULL);
+  // pthread_cond_init(cond, NULL);
+  // res->cond = cond;
+  // res->lock = lock;
+  // #################################################
+
+//   return res;
+// }

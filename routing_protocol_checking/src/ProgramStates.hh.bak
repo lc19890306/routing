@@ -1,0 +1,80 @@
+#ifndef __HH_PROGRAM_STATES_
+#define __HH_PROGRAM_STATES_
+
+#include "ProgramState.hh"
+
+#include <cstring>
+
+class ProgramState1 : public ProgramState {
+public:
+  ProgramState1(const unsigned &label,
+  		const Path<int> &p, 
+  		const int &res, 
+  		// const TraceInfo &this_traceInfo,
+  		const unsigned &i,
+  		const unsigned &j,
+  		const Path<int> path[maxnum][maxnum],
+  		const bool s[maxnum]) :
+    ProgramState(label),
+    p(p),
+    res(res),
+    // this_traceInfo(this_traceInfo),
+    i(i),
+    j(j) {
+    std::memcpy(this->path, path, sizeof(path[0][0]) * maxnum * maxnum);
+    std::memcpy(this->s, s, sizeof(s[0]) * maxnum);
+  }
+
+  // unsigned label;
+  Path<int> p;
+  int res;
+  // TraceInfo this_traceInfo;
+  unsigned i;
+  unsigned j;
+  Path<int> path[maxnum][maxnum];
+  bool s[maxnum];
+};
+
+class ProgramState2 : public ProgramState {
+public:
+  ProgramState2(const unsigned &label,
+		const Path<int> &p, 
+		const int &res, 
+		// const TraceInfo &this_traceInfo,
+		const unsigned &i,
+		const unsigned &j,
+		const Path<int> path[maxnum][maxnum],
+		const bool s[maxnum],
+		const unsigned &u,
+		const unsigned &x,
+		const unsigned &y,
+		const Path<int> &tmp) :
+    ProgramState(label),
+    p(p),
+    res(res),
+    // this_traceInfo(this_traceInfo),
+    i(i),
+    j(j),
+    u(u),
+    x(x),
+    y(y),
+    tmp(tmp) {
+    std::memcpy(this->path, path, sizeof(path[0][0]) * maxnum * maxnum);
+    std::memcpy(this->s, s, sizeof(s[0]) * maxnum);
+  }
+
+  // unsigned label;
+  Path<int> p;
+  int res;
+  // TraceInfo this_traceInfo;
+  unsigned i;
+  unsigned j;
+  Path<int> path[maxnum][maxnum];
+  bool s[maxnum];
+  unsigned u;
+  unsigned x;
+  unsigned y;
+  Path<int> tmp;
+};
+
+#endif	// __HH_PROGRAM_STATES_

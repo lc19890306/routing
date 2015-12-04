@@ -1,0 +1,66 @@
+#include "TernaryTree.hh"
+
+namespace TernaryTree {
+
+  std::set<Node *> addresses;
+
+Node::Node() : parent(nullptr), children(std::vector<Node *>(3, nullptr)) {}
+
+Node::Node(const unsigned short &id) : parent(nullptr), id(id), children(std::vector<Node *>(3, nullptr)) {}
+
+  // Node::Node(const Node &node) : parent(node.parent), id(node.id), children(node.children) {}
+
+  Node::Node(const Node &node) {
+    parent = node.parent;
+    id = node.id;
+    children = node.children;
+  }
+
+Node::~Node() {
+  if (nullptr != parent)
+    parent = nullptr;
+  for (auto &&child : children) {
+    auto pos(addresses.find(child));
+    if (nullptr != child && pos != addresses.end()) {
+      delete child;
+      addresses.erase(pos);
+      child = nullptr;
+    }
+  }  // std::vector<Node *>().swap(children);
+}
+
+Node *
+Node::addChild(const unsigned short &id) {
+  Node *node = new Node(id);
+  children[id] = node;
+  return node;
+}
+
+  Tree::Tree() : root(new Node()) {}
+
+Tree::~Tree() {
+  for (auto &&address : addresses)
+    if (nullptr != address) {
+      delete address;
+      // pair.first = nullptr;
+    }
+  std::set<Node *>().swap(addresses);
+}
+
+void
+Tree::insert(const std::vector<unsigned short> &trace) {
+  Node *currentNode(root);
+  for (auto iter = trace.begin(); iter != trace.end(); ++iter) {
+    // switch (num) {
+    // case 0:
+    // }
+    addresses.insert(currentNode);
+    currentNode = currentNode->addChild(*iter);
+  }
+}
+
+  void Tree::dump() {
+    
+  }
+
+} // namespace TernaryTree

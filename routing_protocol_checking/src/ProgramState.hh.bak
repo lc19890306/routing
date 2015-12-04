@@ -1,0 +1,39 @@
+#ifndef __HH_PROGRAM_STATE_
+#define __HH_PROGRAM_STATE_
+
+#include <cstring>
+
+#include "path.h"
+#include "TraceInfo.h"
+
+class ProgramState {
+public:
+  ProgramState() : label(0), gcFlag(false) {}
+  ProgramState(const unsigned &label) : label(label), gcFlag(false) {}
+
+  unsigned getLabel() const {
+    return label;
+  }
+
+  void setLabel(const unsigned &label) {
+    this->label = label;
+  }
+
+  bool is_GCAllowed() const {
+    return gcFlag;
+  }
+
+  void setGCFlag(const bool &gcFlag) {
+    this->gcFlag = gcFlag;
+  }
+
+private:
+  unsigned label;
+  bool gcFlag;
+};
+
+typedef ProgramState* pProgramState;
+
+typedef enum {RECORD, RESUME} CheckJob;
+
+#endif	// __HH_PROGRAM_STATE_

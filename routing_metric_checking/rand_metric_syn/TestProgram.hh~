@@ -1,0 +1,24 @@
+#ifndef TESTPROGRAM_HH
+#define TESTPROGRAM_HH
+
+#include "RandMetric.hh"
+
+#include <fstream>
+#include <string>
+// #include <vector>
+#include <list>
+
+class TestProgram {
+public:
+  TestProgram(const RandMetric &metric);
+  ~TestProgram();
+  void print();
+  void writeIntoFile();
+
+private:
+  std::ofstream fout;
+  // std::vector<std::string> program;
+  std::list<std::string> program;
+};
+
+#endif	// TESTPROGRAM_HH
